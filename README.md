@@ -2,7 +2,7 @@
 
 A demonstration of AI-generated, executable user interfaces.
 
-![Rich Responses Demo](image.png)
+![Rich reponse dev](image-1.png)
 
 ## Why This Exists
 
