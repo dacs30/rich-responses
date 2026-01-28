@@ -1,4 +1,4 @@
-# Gen-UX
+# Rich Responses
 
 A demonstration of AI-generated, executable user interfaces.
 
@@ -6,13 +6,13 @@ A demonstration of AI-generated, executable user interfaces.
 
 Most AI interactions today are limited to plain text conversations. You ask a question, you get text back. But what if AI could respond with something more tangible?
 
-Gen-UX explores this idea by having AI generate actual, working React components instead of just describing them. Instead of getting a paragraph explaining what a login form should look like, you get a functioning login form that renders immediately.
+Rich Responses explores this idea by having AI generate actual, working React components instead of just describing them. Instead of getting a paragraph explaining what a login form should look like, you get a functioning login form that renders immediately.
 
 This is about pushing past the text-only constraint and seeing what happens when AI can respond with interactive, executable artifacts.
 
 ## What It Does
 
-Gen-UX is a Next.js app where you describe a UI component in plain English, and an AI model generates the React code for it. The component then renders live in your browser.
+Rich Responses is a Next.js app where you describe a UI component in plain English, and an AI model generates the React code for it. The component then renders live in your browser.
 
 Here's the flow:
 1. Pick an AI model (OpenAI's GPT-4o or Anthropic's Claude)
@@ -37,7 +37,7 @@ First, clone the repo and install dependencies:
 
 ```bash
 git clone <your-repo-url>
-cd gen-ux
+cd rich-responses
 npm install
 ```
 
@@ -59,7 +59,7 @@ Open [http://localhost:3000](http://localhost:3000) and you're good to go.
 ## Project Structure
 
 ```
-gen-ux/
+rich-responses/
 ├── app/
 │   ├── api/generate/
 │   │   ├── openai/route.ts      # OpenAI endpoint
