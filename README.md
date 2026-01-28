@@ -2,6 +2,8 @@
 
 A demonstration of AI-generated, executable user interfaces.
 
+![Rich Responses Demo](image.png)
+
 ## Why This Exists
 
 Most AI interactions today are limited to plain text conversations. You ask a question, you get text back. But what if AI could respond with something more tangible?

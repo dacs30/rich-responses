@@ -23,16 +23,37 @@ export function CodeSandbox({ code }: CodeSandboxProps) {
       componentCode = componentCode.replace(/```\n?$/g, '');
       componentCode = componentCode.trim();
 
-      // Remove import statements - we'll provide these in the sandbox
+      // Remove all import statements (including multi-line imports)
       componentCode = componentCode.replace(/^import\s+.*?from\s+['"].*?['"];?\s*$/gm, '');
       componentCode = componentCode.replace(/^import\s+['"].*?['"];?\s*$/gm, '');
+      componentCode = componentCode.replace(/^import\s+(?:\*\s+as\s+\w+|{[\s\S]*?})\s+from\s+['"].*?['"];?\s*$/gm, '');
+      componentCode = componentCode.replace(/import\s+[\s\S]*?from\s+['"].*?['"]/g, '');
+      
+      // Remove TypeScript type definitions - more aggressive approach
+      // Remove type alias declarations with object bodies (multi-line)
+      componentCode = componentCode.replace(/^type\s+\w+\s*=\s*\{[^}]*\}\s*$/gm, '');
+      // Remove type alias declarations with union types
+      componentCode = componentCode.replace(/^type\s+\w+\s*=\s*[^\n]+$/gm, '');
+      // Remove interface declarations
+      componentCode = componentCode.replace(/^interface\s+\w+\s*\{[^}]*\}/gm, '');
+      
+      // Remove type annotations from variables, parameters, and return types
+      // Remove from const/let/var declarations: const x: Type = ...
+      componentCode = componentCode.replace(/:\s*\w+(?:<[^>]+>)?(?:\[\])?(?=\s*[=\)])/g, '');
+      // Remove from array type annotations: Type[]
+      componentCode = componentCode.replace(/:\s*\w+\[\]/g, '');
+      // Remove from generic useState: useState<Type>
+      componentCode = componentCode.replace(/<[^>]+>(?=\()/g, '');
+      // Remove function return type annotations
+      componentCode = componentCode.replace(/\)\s*:\s*(?:JSX\.Element|React\.ReactElement|ReactNode|void|any|[\w\[\]]+)(?=\s*[{=>])/g, ')');
+      // Remove as type assertions
+      componentCode = componentCode.replace(/\s+as\s+\w+/g, '');
+      // Remove non-null assertions (!)
+      componentCode = componentCode.replace(/!(?=[\.\[\),;])/g, '');
       
       // Remove export default and just keep the function
       componentCode = componentCode.replace(/^export\s+default\s+/gm, '');
       componentCode = componentCode.trim();
-
-      // Escape backticks and template literals for safe injection
-      const escapedCode = componentCode.replace(/`/g, '\\`').replace(/\$/g, '\\$');
 
       // Create the HTML document for the iframe
       const html = `
@@ -61,7 +82,7 @@ export function CodeSandbox({ code }: CodeSandboxProps) {
 <body>
   <div id="root"></div>
   <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
+    const { useState, useEffect, useRef, useMemo, useCallback, useReducer, useContext, createContext } = React;
     
     // Stub for shadcn components
     const Button = ({ children, className = '', variant, size, asChild, ...props }) => (
@@ -130,11 +151,31 @@ export function CodeSandbox({ code }: CodeSandboxProps) {
       </label>
     );
     
-    const Select = ({ children, className = '', ...props }) => (
-      <select className={\`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 \${className}\`} {...props}>
-        {children}
-      </select>
+    const Select = ({ children, className = '', value, onValueChange, ...props }) => {
+      const [localValue, setLocalValue] = React.useState(value);
+      React.useEffect(() => setLocalValue(value), [value]);
+      
+      return (
+        <select 
+          className={\`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 \${className}\`}
+          value={localValue}
+          onChange={(e) => {
+            setLocalValue(e.target.value);
+            onValueChange?.(e.target.value);
+          }}
+          {...props}
+        >
+          {children}
+        </select>
+      );
+    };
+    
+    const SelectTrigger = ({ children, className = '', ...props }) => children;
+    const SelectContent = ({ children, ...props }) => children;
+    const SelectItem = ({ children, value, ...props }) => (
+      <option value={value} {...props}>{children}</option>
     );
+    const SelectValue = ({ placeholder }) => null;
     
     const Checkbox = ({ className = '', ...props }) => (
       <input 
@@ -145,13 +186,56 @@ export function CodeSandbox({ code }: CodeSandboxProps) {
     );
     
     const Badge = ({ children, className = '', variant, ...props }) => (
-      <div className={\`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors \${variant === 'outline' ? 'border-current' : 'border-transparent'} \${className}\`} {...props}>
+      <div className={\`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors \${variant === 'outline' ? 'border-current' : variant === 'secondary' ? 'bg-secondary text-secondary-foreground' : 'border-transparent'} \${className}\`} {...props}>
         {children}
       </div>
     );
     
+    const Separator = ({ className = '', orientation = 'horizontal', ...props }) => (
+      <div className={\`shrink-0 bg-border \${orientation === 'vertical' ? 'h-full w-[1px]' : 'h-[1px] w-full'} \${className}\`} {...props} />
+    );
+    
+    const Tabs = ({ children, defaultValue, className = '', ...props }) => {
+      const [activeTab, setActiveTab] = React.useState(defaultValue);
+      return (
+        <div className={\`\${className}\`} {...props}>
+          {React.Children.map(children, child => 
+            React.isValidElement(child) ? React.cloneElement(child, { activeTab, setActiveTab }) : child
+          )}
+        </div>
+      );
+    };
+    
+    const TabsList = ({ children, className = '', activeTab, setActiveTab, ...props }) => (
+      <div className={\`inline-flex h-10 items-center justify-center rounded-md bg-muted p-1 text-muted-foreground \${className}\`} {...props}>
+        {React.Children.map(children, child =>
+          React.isValidElement(child) ? React.cloneElement(child, { activeTab, setActiveTab }) : child
+        )}
+      </div>
+    );
+    
+    const TabsTrigger = ({ children, value, className = '', activeTab, setActiveTab, ...props }) => (
+      <button
+        className={\`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 \${activeTab === value ? 'bg-background text-foreground shadow-sm' : ''} \${className}\`}
+        onClick={() => setActiveTab(value)}
+        {...props}
+      >
+        {children}
+      </button>
+    );
+    
+    const TabsContent = ({ children, value, className = '', activeTab, ...props }) => (
+      activeTab === value ? <div className={\`\${className}\`} {...props}>{children}</div> : null
+    );
+    
+    const Progress = ({ value = 0, className = '', ...props }) => (
+      <div className={\`relative h-4 w-full overflow-hidden rounded-full bg-secondary \${className}\`} {...props}>
+        <div className="h-full w-full flex-1 bg-primary transition-all" style={{ transform: \`translateX(-\${100 - (value || 0)}%)\` }} />
+      </div>
+    );
+    
     try {
-      ${escapedCode}
+      ${componentCode}
       
       // Find the component function - try multiple patterns
       let Component = null;
@@ -160,7 +244,7 @@ export function CodeSandbox({ code }: CodeSandboxProps) {
       const allKeys = Object.keys(window).concat(Object.getOwnPropertyNames(window));
       
       // Filter for React components (functions starting with uppercase)
-      const excludedNames = ['Button', 'Card', 'CardHeader', 'CardTitle', 'CardDescription', 'CardContent', 'CardFooter', 'Input', 'Textarea', 'Label', 'Select', 'Checkbox', 'Badge', 'React', 'ReactDOM'];
+      const excludedNames = ['Button', 'Card', 'CardHeader', 'CardTitle', 'CardDescription', 'CardContent', 'CardFooter', 'Input', 'Textarea', 'Label', 'Select', 'SelectTrigger', 'SelectContent', 'SelectItem', 'SelectValue', 'Checkbox', 'Badge', 'Separator', 'Tabs', 'TabsList', 'TabsTrigger', 'TabsContent', 'Progress', 'React', 'ReactDOM'];
       
       for (let key of allKeys) {
         if (excludedNames.includes(key)) continue;
