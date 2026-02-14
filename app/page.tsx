@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState } from 'react';
@@ -8,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CodeSandbox } from '@/components/code-sandbox';
 import { Loader2 } from 'lucide-react';
+import { generateWithAnthropic, generateWithOpenAI } from './actions';
 
 type Agent = 'openai' | 'anthropic';
 
@@ -29,21 +29,16 @@ export default function Home() {
     setGeneratedCode('');
 
     try {
-      const response = await fetch(`/api/generate/${agent}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt }),
-      });
+      const generate = agent === 'anthropic' ? generateWithAnthropic : generateWithOpenAI;
+      const data = await generate(prompt);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate code');
+      if (data.error) {
+        throw new Error(data.error);
       }
 
-      setGeneratedCode(data.code);
-    } catch (err: any) {
-      setError(err.message || 'An error occurred');
+      setGeneratedCode(data.code || '');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
     }
