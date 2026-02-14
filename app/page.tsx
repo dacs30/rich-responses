@@ -1,44 +1,58 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CodeSandbox } from '@/components/code-sandbox';
-import { Loader2 } from 'lucide-react';
-import { generateWithAnthropic, generateWithOpenAI } from './actions';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { CodeSandbox } from "@/components/code-sandbox";
+import { CheckCircle2Icon, InfoIcon, Loader2 } from "lucide-react";
+import { generateWithAnthropic, generateWithOpenAI } from "./actions";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-type Agent = 'openai' | 'anthropic';
+type Agent = "openai" | "anthropic";
 
 export default function Home() {
-  const [agent, setAgent] = useState<Agent>('openai');
-  const [prompt, setPrompt] = useState('');
-  const [generatedCode, setGeneratedCode] = useState('');
+  const [agent, setAgent] = useState<Agent>("openai");
+  const [prompt, setPrompt] = useState("");
+  const [generatedCode, setGeneratedCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
-      setError('Please enter a prompt');
+      setError("Please enter a prompt");
       return;
     }
 
     setIsLoading(true);
-    setError('');
-    setGeneratedCode('');
+    setError("");
+    setGeneratedCode("");
 
     try {
-      const generate = agent === 'anthropic' ? generateWithAnthropic : generateWithOpenAI;
+      const generate =
+        agent === "anthropic" ? generateWithAnthropic : generateWithOpenAI;
       const data = await generate(prompt);
 
       if (data.error) {
         throw new Error(data.error);
       }
 
-      setGeneratedCode(data.code || '');
+      setGeneratedCode(data.code || "");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -52,6 +66,18 @@ export default function Home() {
           <p className="text-muted-foreground">
             AI should not be limited to plain text.
           </p>
+          <div className="m-auto flex items-center justify-center text-green-500 space-x-2 md:w-2xl sm:w-auto">
+            <Alert>
+              <InfoIcon />
+              <AlertTitle>Not all queries will compile</AlertTitle>
+              <AlertDescription>
+                Some queries may not produce valid code or may require
+                additional adjustments. A real AI agent would be able to iterate
+                and refine the code until it works, but this demo is limited to
+                a single generation step.
+              </AlertDescription>
+            </Alert>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -66,13 +92,18 @@ export default function Home() {
             <CardContent className="flex-1 space-y-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">AI Agent</label>
-                <Select value={agent} onValueChange={(value: Agent) => setAgent(value)}>
+                <Select
+                  value={agent}
+                  onValueChange={(value: Agent) => setAgent(value)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="openai">OpenAI (GPT-5.2)</SelectItem>
-                    <SelectItem value="anthropic">Anthropic (Claude)</SelectItem>
+                    <SelectItem value="anthropic">
+                      Anthropic (Claude)
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -105,7 +136,7 @@ export default function Home() {
                     Generating...
                   </>
                 ) : (
-                  'Generate UI'
+                  "Generate UI"
                 )}
               </Button>
 
@@ -120,7 +151,9 @@ export default function Home() {
                       variant="outline"
                       size="sm"
                       className="absolute top-2 right-2"
-                      onClick={() => navigator.clipboard.writeText(generatedCode)}
+                      onClick={() =>
+                        navigator.clipboard.writeText(generatedCode)
+                      }
                     >
                       Copy
                     </Button>
