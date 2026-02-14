@@ -4,7 +4,7 @@ import OpenAI from "openai";
 import { SYSTEM_PROMPT } from "@/lib/prompts";
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || "",
 });
 
 export async function POST(req: NextRequest) {

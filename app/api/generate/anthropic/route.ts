@@ -3,7 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { SYSTEM_PROMPT } from '@/lib/prompts';
 
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiKey: process.env.ANTHROPIC_API_KEY || "",
 });
 
 export async function POST(req: NextRequest) {
