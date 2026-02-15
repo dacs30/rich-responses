@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -261,8 +262,8 @@ export function CodeSandbox({ code }: CodeSandboxProps) {
         document.getElementById('root').innerHTML = '<div style="padding: 20px; color: #ef4444;"><strong>Unable to find component.</strong><br/>Make sure your code exports a React component with a capitalized name.<br/><br/>Debug info: Check console for details.</div>';
         console.log('Available functions:', allKeys.filter(k => typeof window[k] === 'function' && /^[A-Z]/.test(k)));
       }
-    } catch (err) {
-      document.getElementById('root').innerHTML = '<div style="padding: 20px; color: #ef4444;"><strong>Render Error:</strong><br/>' + err.message + '<br/><br/><small>Check browser console for full error.</small></div>';
+    } catch (err: unknown) {
+      document.getElementById('root').innerHTML = '<div style="padding: 20px; color: #ef4444;"><strong>Render Error:</strong><br/>' + (err instanceof Error ? err.message : 'An error occurred') + '<br/><br/><small>Check browser console for full error.</small></div>';
       console.error('Full error:', err);
     }
   </script>
@@ -272,8 +273,8 @@ export function CodeSandbox({ code }: CodeSandboxProps) {
       const iframe = iframeRef.current;
       iframe.srcdoc = html;
       setError('');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
     }
   }, [code]);
 

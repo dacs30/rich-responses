@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CodeSandbox } from "@/components/code-sandbox";
-import { CheckCircle2Icon, InfoIcon, Loader2 } from "lucide-react";
+import { InfoIcon, Loader2 } from "lucide-react";
 import { generateWithAnthropic, generateWithOpenAI } from "./actions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
